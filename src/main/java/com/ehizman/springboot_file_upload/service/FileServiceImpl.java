@@ -1,8 +1,6 @@
 package com.ehizman.springboot_file_upload.service;
 
-import com.amazonaws.AmazonServiceException;
 import com.amazonaws.HttpMethod;
-import com.amazonaws.SdkClientException;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.*;
 import com.ehizman.springboot_file_upload.exceptions.FileDownloadException;
@@ -39,49 +37,33 @@ public class FileServiceImpl implements FileService {
     private final AmazonS3 s3Client;
 
     @Override
-    public String uploadFile(MultipartFile multipartFile) {
-
-        try {
-            //convert multipart file to file
-            File file = new File(multipartFile.getOriginalFilename());
-            try (FileOutputStream fileOutputStream = new FileOutputStream(file)){
-                fileOutputStream.write(multipartFile.getBytes());
-            }
-
-
-            String fileName = generateFileName(multipartFile);
-            String fileUrl = bucketUrl + "/" + bucketName + "/" + fileName;
-
-            //upload file
-            PutObjectRequest request = new PutObjectRequest(bucketName, fileName, file);
-            ObjectMetadata metadata = new ObjectMetadata();
-            metadata.setContentType("plain/"+ FilenameUtils.getExtension(multipartFile.getOriginalFilename()));
-            metadata.addUserMetadata("Title", "File Upload - " + fileName);
-            metadata.setContentLength(file.length());
-            request.setMetadata(metadata);
-            s3Client.putObject(request);
-
-            // delete file
-            file.delete();
-
-            return fileUrl;
-
-        } catch (AmazonServiceException e) {
-            // The call was transmitted successfully, but Amazon S3 couldn't process
-            // it, so it returned an error response.
-            e.printStackTrace();
-        } catch (SdkClientException e) {
-            // Amazon S3 couldn't be contacted for a response, or the client
-            // couldn't parse the response from Amazon S3.
-            e.printStackTrace();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+    public String uploadFile(MultipartFile multipartFile) throws IOException {
+        File file = new File(multipartFile.getOriginalFilename());
+        try (FileOutputStream fileOutputStream = new FileOutputStream(file)){
+            fileOutputStream.write(multipartFile.getBytes());
         }
-        return null;
+
+
+        String fileName = generateFileName(multipartFile);
+        String fileUrl = bucketUrl + "/" + bucketName + "/" + fileName;
+
+        //upload file
+        PutObjectRequest request = new PutObjectRequest(bucketName, fileName, file);
+        ObjectMetadata metadata = new ObjectMetadata();
+        metadata.setContentType("plain/"+ FilenameUtils.getExtension(multipartFile.getOriginalFilename()));
+        metadata.addUserMetadata("Title", "File Upload - " + fileName);
+        metadata.setContentLength(file.length());
+        request.setMetadata(metadata);
+        s3Client.putObject(request);
+
+        // delete file
+        file.delete();
+
+        return fileUrl;
     }
 
     @Override
-    public Object downloadFile(String fileName) throws FileDownloadException {
+    public Object downloadFile(String fileName) throws FileDownloadException, IOException {
         if (bucketIsEmpty()) {
             throw new FileDownloadException("Requested bucket is empty");
         }
@@ -102,8 +84,6 @@ public class FileServiceImpl implements FileService {
             } else {
                 throw new FileDownloadException("Could not find the file!");
             }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
         }
     }
 

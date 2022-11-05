@@ -4,10 +4,12 @@ import com.ehizman.springboot_file_upload.exceptions.FIleUploadException;
 import com.ehizman.springboot_file_upload.exceptions.FileDownloadException;
 import org.springframework.web.multipart.MultipartFile;
 
-public interface FileService {
-    String uploadFile(MultipartFile multipartFile) throws FIleUploadException;
+import java.io.IOException;
 
-    Object downloadFile(String fileName) throws FileDownloadException;
+public interface FileService {
+    String uploadFile(MultipartFile multipartFile) throws FIleUploadException, IOException;
+
+    Object downloadFile(String fileName) throws FileDownloadException, IOException;
 
     String generatePreSignedUploadUrl(String fileName);
 

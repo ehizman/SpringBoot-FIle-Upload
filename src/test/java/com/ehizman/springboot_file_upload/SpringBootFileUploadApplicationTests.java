@@ -14,7 +14,6 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.io.File;
 import java.io.FileOutputStream;
-import java.nio.file.Path;
 
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
@@ -51,7 +50,7 @@ class SpringBootFileUploadApplicationTests {
                 "hello.txt",
                 MediaType.TEXT_PLAIN_VALUE,"".getBytes()
         );
-        mockMvc.perform(multipart("/api/v1/file/upload").file(file)).andExpect(status().isNotFound());
+        mockMvc.perform(multipart("/api/v1/file/upload").file(file)).andExpect(status().isNoContent());
     }
 
     @Test
