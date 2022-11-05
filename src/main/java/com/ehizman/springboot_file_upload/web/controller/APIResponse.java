@@ -13,5 +13,7 @@ public class APIResponse {
     private String message;
     private boolean isSuccessful;
     private int statusCode;
+    private Object data;
+    private String expiresIn;
 }
 
