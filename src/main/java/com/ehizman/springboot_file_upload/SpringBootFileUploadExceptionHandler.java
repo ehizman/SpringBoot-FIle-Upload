@@ -5,12 +5,14 @@ import com.amazonaws.SdkClientException;
 import com.ehizman.springboot_file_upload.exceptions.FileDownloadException;
 import com.ehizman.springboot_file_upload.exceptions.FileEmptyException;
 import com.ehizman.springboot_file_upload.exceptions.SpringBootFileUploadException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.context.request.WebRequest;
+import org.springframework.web.multipart.MultipartException;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
 import java.io.FileNotFoundException;
@@ -18,6 +20,7 @@ import java.io.IOException;
 
 
 @ControllerAdvice
+@Slf4j
 public class SpringBootFileUploadExceptionHandler extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(value
@@ -70,11 +73,22 @@ public class SpringBootFileUploadExceptionHandler extends ResponseEntityExceptio
     }
 
     @ExceptionHandler(value
-            = { Exception.class, IOException.class, FileNotFoundException.class})
-    protected ResponseEntity<Object> handleUnexpectedException(
+            = {IOException.class, FileNotFoundException.class, MultipartException.class})
+    protected ResponseEntity<Object> handleIOException(
             Exception ex, WebRequest request) {
         String bodyOfResponse = ex.getMessage();
         return handleExceptionInternal(ex, bodyOfResponse,
+                new HttpHeaders(), HttpStatus.BAD_REQUEST, request);
+    }
+
+    @ExceptionHandler(value
+            = {Exception.class})
+    protected ResponseEntity<Object> handleUnExpectedException(
+            Exception ex, WebRequest request) {
+        String bodyOfResponse = ex.getMessage();
+        log.info("Exception ==> ", ex);
+        log.info("Fatal exception ===> {}", bodyOfResponse);
+        return handleExceptionInternal(ex, "We apologize. Something is not right",
                 new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR, request);
     }
 }

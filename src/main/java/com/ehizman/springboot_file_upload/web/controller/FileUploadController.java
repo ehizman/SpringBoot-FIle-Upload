@@ -1,11 +1,10 @@
 package com.ehizman.springboot_file_upload.web.controller;
 
-import com.amazonaws.AmazonServiceException;
-import com.amazonaws.SdkClientException;
 import com.ehizman.springboot_file_upload.exceptions.FIleUploadException;
 import com.ehizman.springboot_file_upload.exceptions.FileDownloadException;
 import com.ehizman.springboot_file_upload.exceptions.FileEmptyException;
 import com.ehizman.springboot_file_upload.service.FileService;
+import com.ehizman.springboot_file_upload.web.APIResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FilenameUtils;
 import org.springframework.http.HttpHeaders;
@@ -17,9 +16,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
-import java.io.File;
 import java.io.IOException;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -46,9 +43,9 @@ public class FileUploadController {
         List<String> allowedFileExtensions = new ArrayList<>(Arrays.asList("pdf", "txt", "epub", "csv", "png", "jpg", "jpeg", "srt"));
 
         if (isValidFile && allowedFileExtensions.contains(FilenameUtils.getExtension(multipartFile.getOriginalFilename()))){
-            String fileUrl = fileService.uploadFile(multipartFile);
+            String fileName = fileService.uploadFile(multipartFile);
             APIResponse apiResponse = APIResponse.builder()
-                    .message("file uploaded successfully. File can be downloaded at " + fileUrl)
+                    .message("file uploaded successfully. File unique name => "+ fileName)
                     .isSuccessful(true)
                     .statusCode(200)
                     .build();
@@ -79,67 +76,21 @@ public class FileUploadController {
         }
     }
 
-    @GetMapping("/generate-download-url")
-    public ResponseEntity<?> getPresignedDownloadURL(@RequestParam("fileName") @NotBlank @NotNull String fileName) throws FileDownloadException {
-        String preSignedUrl = fileService.generatePreSignedDownloadUrl(fileName);
-        APIResponse apiResponse = APIResponse.builder()
-                .message("Successfully generated presigned URL for file sharing")
-                .data(preSignedUrl)
-                .expiresIn("10 minutes")
-                .isSuccessful(true)
-                .statusCode(200)
-                .build();
-        return new ResponseEntity<>(apiResponse, HttpStatus.OK);
-    }
-
-    @GetMapping("/generate-upload-url")
-    public ResponseEntity<?> getPresignedUploadURL(@RequestParam("fileName") @NotBlank @NotNull String fileName){
-        try {
-            String preSignedUrl = fileService.generatePreSignedUploadUrl(fileName);
-            APIResponse apiResponse = APIResponse.builder()
-                    .message("Successfully generated presigned upload URL")
-                    .data(preSignedUrl)
-                    .expiresIn("5 minutes")
-                    .isSuccessful(true)
-                    .statusCode(200)
-                    .build();
-            return new ResponseEntity<>(apiResponse, HttpStatus.OK);
-        } catch (AmazonServiceException e) {
-            // The call was transmitted successfully, but Amazon S3 couldn't process
-            // it, so it returned an error response.
-            e.printStackTrace();
-            APIResponse apiResponse = APIResponse.builder()
-                    .message(e.getMessage())
-                    .isSuccessful(false)
-                    .statusCode(400)
-                    .build();
-            return new ResponseEntity<>(apiResponse, HttpStatus.SERVICE_UNAVAILABLE);
-        } catch (SdkClientException e) {
-            // Amazon S3 couldn't be contacted for a response, or the client
-            // couldn't parse the response from Amazon S3.
-            e.printStackTrace();
-            APIResponse apiResponse = APIResponse.builder()
-                    .message(e.getMessage())
-                    .isSuccessful(false)
-                    .statusCode(400)
-                    .build();
-            return new ResponseEntity<>(apiResponse, HttpStatus.SERVICE_UNAVAILABLE);
-        }
-    }
-
     @DeleteMapping("/delete")
     public ResponseEntity<?> delete(@RequestParam("fileName") @NotBlank @NotNull String fileName){
-        File file = Paths.get(fileName).toFile();
-        if (file.exists()){
-            file.delete();
-            return new ResponseEntity<>("file deleted!", HttpStatus.OK);
+        boolean isDeleted = fileService.delete(fileName);
+        if (isDeleted){
+            APIResponse apiResponse = APIResponse.builder().message("file deleted!")
+                                                            .statusCode(200).build();
+            return new ResponseEntity<>(apiResponse, HttpStatus.OK);
         } else {
-            return new ResponseEntity<>("file do not exist", HttpStatus.NOT_FOUND);
+            APIResponse apiResponse = APIResponse.builder().message("file does not exist")
+                .statusCode(404).build();
+            return new ResponseEntity<>(apiResponse, HttpStatus.NOT_FOUND);
         }
     }
 
     private boolean isValidFile(MultipartFile multipartFile){
-        log.info("Empty Status ==> {}", multipartFile.isEmpty());
         if (Objects.isNull(multipartFile.getOriginalFilename())){
             return false;
         }

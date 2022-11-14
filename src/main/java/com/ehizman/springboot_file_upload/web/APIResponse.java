@@ -1,11 +1,9 @@
-package com.ehizman.springboot_file_upload.web.controller;
+package com.ehizman.springboot_file_upload.web;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
-@NoArgsConstructor
 @AllArgsConstructor
 @Data
 @Builder
@@ -14,6 +12,5 @@ public class APIResponse {
     private boolean isSuccessful;
     private int statusCode;
     private Object data;
-    private String expiresIn;
 }
 

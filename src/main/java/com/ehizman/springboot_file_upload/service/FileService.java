@@ -11,7 +11,5 @@ public interface FileService {
 
     Object downloadFile(String fileName) throws FileDownloadException, IOException;
 
-    String generatePreSignedUploadUrl(String fileName);
-
-    String generatePreSignedDownloadUrl(String fileName) throws FileDownloadException;
+    boolean delete(String fileName);
 }
