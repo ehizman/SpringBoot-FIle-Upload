@@ -81,6 +81,7 @@ public class FileUploadController {
         boolean isDeleted = fileService.delete(fileName);
         if (isDeleted){
             APIResponse apiResponse = APIResponse.builder().message("file deleted!")
+                                                            .isSuccessful(true)
                                                             .statusCode(200).build();
             return new ResponseEntity<>(apiResponse, HttpStatus.OK);
         } else {

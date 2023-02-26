@@ -49,9 +49,6 @@ public class FileServiceImpl implements FileService {
         request.setMetadata(metadata);
         s3Client.putObject(request);
 
-        // delete file
-        file.delete();
-
         return fileName;
     }
 
